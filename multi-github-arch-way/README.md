@@ -100,6 +100,39 @@ Since you're using multiple accounts, organize your projects by account type:
 
 ---
 
+## 🗺️ Newbie Flowchart: "What Do I Do?"
+
+```
+┌─────────────────────────────────────┐
+│ Do you already have a repo on       │
+│ GitHub that you want to work on?    │
+└───────────┬─────────────────────────┘
+            │
+      ┌─────┴─────┐
+      │           │
+     YES         NO
+      │           │
+      │           └──> Go to "Scenario 2: Creating New Repo"
+      │
+      └──> Go to "Scenario 1: Cloning Existing Repo"
+```
+
+### Quick Decision Tree:
+
+**"I want to work on an existing project"**
+→ Use `git clone git@github-ALIAS:user/repo.git`
+
+**"I'm starting a brand new project"**
+→ Create repo on GitHub first, then use SSH remote
+
+**"I used HTTPS and now it's asking for a password"**
+→ You messed up! Remove remote and add SSH remote
+
+**"Nothing works and I'm sad"**
+→ Run `./git-github-reset.sh` and start over
+
+---
+
 ## 🎨 Configure Git Identity (IMPORTANT!)
 
 SSH handles **authentication** (who you are), but Git needs to know your **name and email** for commits.
@@ -173,17 +206,23 @@ git config user.email
 
 ---
 
-## 🔧 How to Clone Repos
+## 🔧 Working with Repos: The Complete Guide
+
+There are TWO scenarios you'll encounter. **Read both carefully!**
+
+---
+
+### 📥 Scenario 1: Cloning an Existing Repo
 
 **⚠️ CRITICAL: Use the correct SSH alias!**
 
-### Clone Format
+#### Clone Format
 
 ```bash
-git clone git@github-ALIAS:USERNAME/REPO.git
+git clone git@github-ALIAS:USERNAME/REPO.git ~/projects/CATEGORY/REPO
 ```
 
-### Examples
+#### Examples
 
 ```bash
 # Personal account
@@ -196,18 +235,142 @@ git clone git@github-community:hehewhy321-afk/start-agency.git ~/projects/commun
 git clone git@github-work:company/internal-tool.git ~/projects/work/internal-tool
 ```
 
-### ❌ Common Mistakes
+#### ❌ Common Mistakes When Cloning
 
 ```bash
-# WRONG - will use wrong SSH key
+# WRONG - uses default github.com (wrong SSH key)
 git clone git@github.com:yourusername/repo.git
 
-# WRONG - won't work at all
+# WRONG - uses HTTPS (will ask for password)
+git clone https://github.com/yourusername/repo.git
+
+# WRONG - invalid syntax
 git clone git@yourusername:repo.git
 
-# RIGHT
+# RIGHT ✅
 git clone git@github-personal:yourusername/repo.git
 ```
+
+#### After Cloning
+
+```bash
+cd ~/projects/community/start-agency
+
+# Verify Git identity (should auto-detect from directory)
+git config user.email
+# Should show: your-community-email@example.com ✅
+
+# Verify remote URL is correct
+git remote -v
+# Should show: git@github-community:hehewhy321-afk/start-agency.git ✅
+```
+
+---
+
+### 🆕 Scenario 2: Creating a New Repo from Scratch
+
+This is where newbies mess up! Follow these steps **EXACTLY**:
+
+#### Step 1: Create Repo on GitHub First
+
+1. Go to GitHub (log into the correct account!)
+2. Click the `+` icon → New repository
+3. Name it (e.g., `arch-btw-scripts`)
+4. **DO NOT** initialize with README (you'll add files locally)
+5. Click "Create repository"
+
+#### Step 2: Initialize Local Repo
+
+```bash
+# Navigate to your project directory
+cd ~/projects/community
+
+# Create your project folder
+mkdir arch-btw-scripts
+cd arch-btw-scripts
+
+# Create some files
+echo "# My Arch Scripts" > README.md
+mkdir scripts
+
+# Initialize git
+git init
+
+# Rename branch to main (optional but recommended)
+git branch -M main
+```
+
+#### Step 3: Add the CORRECT Remote
+
+**⚠️ THIS IS WHERE EVERYONE MESSES UP!**
+
+```bash
+# ❌ WRONG - Don't copy from GitHub's suggestion!
+git remote add origin https://github.com/hehewhy321-afk/arch-btw-scripts.git
+
+# ✅ RIGHT - Use your SSH alias!
+git remote add origin git@github-community:hehewhy321-afk/arch-btw-scripts.git
+```
+
+**Pro tip:** GitHub shows you HTTPS by default. Ignore it! Use SSH with your alias.
+
+#### Step 4: First Commit and Push
+
+```bash
+# Add all files
+git add .
+
+# Make first commit
+git commit -m "Initial commit: Arch meme energy activated"
+
+# Push to GitHub
+git push -u origin main
+```
+
+#### Verify It Worked
+
+```bash
+# Check remote URL
+git remote -v
+# Should show: git@github-community:hehewhy321-afk/arch-btw-scripts.git (fetch)
+#              git@github-community:hehewhy321-afk/arch-btw-scripts.git (push)
+
+# Test SSH connection
+ssh -T git@github-community
+# Should show: Hi hehewhy321-afk! You've successfully authenticated...
+```
+
+---
+
+### 🔄 What If You Already Added the Wrong Remote?
+
+Don't panic! Fix it:
+
+```bash
+# Remove wrong remote
+git remote remove origin
+
+# Add correct SSH remote
+git remote add origin git@github-community:hehewhy321-afk/arch-btw-scripts.git
+
+# Push again
+git push -u origin main
+```
+
+---
+
+### 📋 Quick Reference: Which Alias to Use?
+
+| Account Type | SSH Alias | Example |
+|-------------|-----------|---------|
+| Personal | `git@github-personal:` | `git@github-personal:yourname/repo.git` |
+| Community | `git@github-community:` | `git@github-community:yourname/repo.git` |
+| Work | `git@github-work:` | `git@github-work:company/repo.git` |
+
+**Rule of thumb:** Match the alias to the folder!
+- `~/projects/personal/*` → use `github-personal`
+- `~/projects/community/*` → use `github-community`
+- `~/projects/work/*` → use `github-work`
 
 ---
 
@@ -262,6 +425,17 @@ The SSH config includes `IdentitiesOnly yes` to prevent SSH from trying all your
 
 ## 🆘 Troubleshooting
 
+### "error: src refspec main does not match any"
+
+**Cause:** You're trying to push but haven't made any commits yet.
+
+**Fix:**
+```bash
+git add .
+git commit -m "Initial commit"
+git push -u origin main
+```
+
 ### "Permission denied (publickey)"
 
 **Cause:** SSH key not added to GitHub or wrong alias used.
@@ -278,6 +452,35 @@ The SSH config includes `IdentitiesOnly yes` to prevent SSH from trying all your
 **Fix:** 
 1. Check your remote: `git remote -v`
 2. Update it: `git remote set-url origin git@github-CORRECT:user/repo.git`
+
+### "Password for 'https://github.com':"
+
+**Cause:** You used HTTPS instead of SSH (rookie mistake!)
+
+**Fix:**
+```bash
+# Remove HTTPS remote
+git remote remove origin
+
+# Add SSH remote with correct alias
+git remote add origin git@github-community:yourname/repo.git
+
+# Try again
+git push -u origin main
+```
+
+### "error: remote origin already exists"
+
+**Cause:** You already added a remote (probably the wrong one).
+
+**Fix:**
+```bash
+# Remove existing remote
+git remote remove origin
+
+# Add the correct one
+git remote add origin git@github-community:yourname/repo.git
+```
 
 ### "Could not open a connection to your authentication agent"
 
